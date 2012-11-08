@@ -10,7 +10,7 @@
 
 (defun normalize (w-arr)
   "Destructively normalizes an array."
-  (let (sum (sum w-arr))
+  (let ((sum (sum w-arr)))
     (map-into w-arr #'(lambda (x) (/ x sum)) w-arr)))
 
 (defun weighted-majority-fn (h z)
@@ -31,7 +31,7 @@
 		  class k)
 	 finally (return class)))))
 
-(defun update-weights (h k cases weights)
+(defun update-weights (h cases weights)
   "Internal function used for adaboost-training. Updates the weights
 properly. Immutable."
   (let* ((err (loop for (yi . xi) in cases
@@ -40,10 +40,12 @@ properly. Immutable."
 		   summing w))
 	 (edited-weights 
 	  (map 'vector 
-	       #'(lambda ((yi . xi) wi)
-		   (if (= (funcall h xi) yi)
-		       (* wi (/ err (- 1 err)))
-		       wi))
+	       #'(lambda (yx wi)
+		   (destructuring-bind (yi . xi)
+		       yx
+		     (if (= (funcall h xi) yi)
+			 (* wi (/ err (- 1 err)))
+			 wi)))
 	       cases weights)))
     (values (normalize edited-weights)
 	    err)))
@@ -66,9 +68,9 @@ pair (h-fn . w), where w is how much weight a the hypothesis should be given."
     (loop with k = 0
        for (L . l-n) in hyp-type 
        do (dotimes (_ l-n)
-	    (let ((h-fn (funcall L cases weights)))
-	      (bind (w+ h-err)
-		    (update-weights h-fn k cases weights)
+	    (let ((h-fn (funcall L cases w)))
+	      (multiple-value-bind (w+ h-err)
+		    (update-weights h-fn cases w)
 		    (setf w w+
 			  (svref h k) h-fn
 			  (svref z k) (log (/ (- 1 h-err)
