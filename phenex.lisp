@@ -2,6 +2,8 @@
 
 (in-package #:phenex)
 
+(defconstant EPSILON 1e-9)
+
 (defmacro bind (&body body)
   `(multiple-value-bind ,@body))
 
@@ -44,7 +46,8 @@ properly. Immutable."
 		   (destructuring-bind (yi . xi)
 		       yx
 		     (if (= (funcall h xi) yi)
-			 (* wi (/ err (- 1 err)))
+			 (* wi (/ err 
+				  (max (- 1 err) EPSILON)))
 			 wi)))
 	       cases weights)))
     (values (normalize edited-weights)
@@ -74,5 +77,7 @@ pair (h-fn . w), where w is how much weight a the hypothesis should be given."
 		    (setf w w+
 			  (svref h k) h-fn
 			  (svref z k) (log (/ (- 1 h-err)
-					      h-err) 2))
-		    (incf k)))))))
+					      (max h-err EPSILON))
+					   2))
+		    (incf k)))))
+    (cons h z)))
