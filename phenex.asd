@@ -22,6 +22,7 @@
   :components ((:file "package")
 	       (:file "utils")
 	       (:file "dataset")
+	       (:file "discretise")
 	       (:file "adaboost")
 	       (:file "naive-bayes")
                (:file "phenex")))
