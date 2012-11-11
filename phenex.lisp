@@ -13,7 +13,9 @@
 (defun normalize (w-arr)
   "Destructively normalizes an array."
   (let ((sum (sum w-arr)))
-    (map-into w-arr #'(lambda (x) (/ x sum)) w-arr)))
+    (if (zerop sum)
+	(normalize (map-into w-arr (constantly 1) w-arr))
+	(map-into w-arr #'(lambda (x) (/ x sum)) w-arr))))
 
 (defun weighted-majority-fn (h z)
   "Returns a weighted majority function which will classify an attribute list."
@@ -38,7 +40,7 @@
 properly. Immutable."
   (let* ((err (loop for (yi . xi) in cases
 		 for w across weights
-		   if (= yi (funcall h xi))
+		 if (not (= yi (funcall h xi)))
 		   summing w))
 	 (edited-weights 
 	  (map 'vector 
@@ -76,8 +78,9 @@ pair (h-fn . w), where w is how much weight a the hypothesis should be given."
 		    (update-weights h-fn cases w)
 		    (setf w w+
 			  (svref h k) h-fn
-			  (svref z k) (log (/ (- 1 h-err)
-					      (max h-err EPSILON))
+			  (svref z k) (log (max EPSILON 
+					    (/ (- 1 h-err)
+					       (max h-err EPSILON)))
 					   2))
 		    (incf k)))))
     (cons h z)))
