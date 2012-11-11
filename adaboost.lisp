@@ -16,10 +16,7 @@
       (loop for hi across h
 	 for zi across z
 	 for guess = (funcall hi x)
-	 for ht-value = (gethash guess ht)
-	 do (if ht-value
-		(setf (gethash guess ht) zi)
-		(incf (gethash guess ht) zi))) ;; Populate guesses
+	 do (incf (gethash guess ht 0) zi)) ;; Populate guesses
       (loop with class = nil and pop = 0
 	 for k being the hash-keys of ht using (hash-value v)
 	 if (< pop v)
