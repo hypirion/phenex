@@ -23,4 +23,5 @@
 	       (:file "utils")
 	       (:file "dataset")
 	       (:file "adaboost")
+	       (:file "naive-bayes")
                (:file "phenex")))

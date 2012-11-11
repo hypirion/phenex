@@ -21,3 +21,6 @@ form, etc."
 
 (defun sum (&rest elts)
   (apply #'reduce #'+ elts))
+
+(defun range (a b)
+  (loop for x from a below b collect x))
