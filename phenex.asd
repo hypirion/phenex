@@ -20,4 +20,7 @@
   :license "Eclipse Public License"
   :depends-on (#:split-sequence)
   :components ((:file "package")
+	       (:file "utils")
+	       (:file "dataset")
+	       (:file "adaboost")
                (:file "phenex")))
