@@ -1,5 +1,5 @@
 ;;;; package.lisp
 
 (defpackage #:phenex
-  (:use #:cl))
+  (:use #:cl #:split-sequence))
 

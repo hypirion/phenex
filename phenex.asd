@@ -18,5 +18,6 @@
   "A boosting program with diverse classifiers, like music to your ears."
   :author "Jean Niklas L'orange <jeannikl@hypirion.com>"
   :license "Eclipse Public License"
+  :depends-on (#:split-sequence)
   :components ((:file "package")
                (:file "phenex")))
