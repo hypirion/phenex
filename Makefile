@@ -8,7 +8,8 @@ FLAGS = --asdf-tree $$HOME/quicklisp/dists/quicklisp/software \
 
 all: $(PROJECT)
 
-$(PROJECT):
+$(PROJECT): $(SRC)
+	$(MAKE) purge
 	$(CC) $(FLAGS) --output $(PROJECT)
 
 clean:
