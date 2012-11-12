@@ -20,15 +20,50 @@ Phenex is a boosting program with diverse classifiers, like music to your ears.
 
 ## Installation
 
-TODO
+To install, one needs to have sbcl [(1)][], GNU make [(2)][] and buildapp
+[(3)][] install on your system. On Debian-based systems, this can be installed
+through the following command:
+
+```bash
+sudo apt-get install sbcl make buildapp
+```
+
+As of now, one need to have quicklisp [(4)][] installed as well, but this
+dependency will be removed in the future. To install quicklisp on your system
+properly, download the `quicklisp.lisp` file and load it with sbcl like so:
+
+```bash
+wget http://beta.quicklisp.org/quicklisp.lisp
+sbcl --load "quicklisp.lisp"
+```
+Then issue the following commands:
+
+```lisp
+(quicklisp-quickstart:install)
+(ql:add-to-init-file)
+```
+
+The default values should set up the system correctly, but if not, one should
+take a look at the [quicklisp installation page][quicklisp-install] for more
+information. The `Makefile` has an ASDF-path which is relative to the quicklisp
+installation, so be sure to find out where the quicklisp system is placed.
 
 ## Usage
 
-TODO
+phenex is ran through issuing `./phenex args` in the shell, with the proper
+options.
 
 ### Options
 
-TODO
+Different commands (*TODO: fix this properly*)
+
+    -p, --preprocess (none | discretize-uniform bincount | ...) -- default: none
+	--split training-part  -- default: 0.8
+	-i, --input file -- default: none, must be specified
+	-o, --output file -- default: stdout
+	-r, --random seed -- default: (based on timestamp)
+	-c, --classifier classifier opts -- can be called multiple times
+	-v, --verbosity (summary | ...)
 
 ## Example usage
 
@@ -41,3 +76,9 @@ Copyright © 2012 Jean Niklas L'orange
 *Sigil of Phenex*, the Phenex logo, is in the public domain because its
 copyright has expired. The rest is distributed under the Eclipse Public License,
 the same as Clojure.
+
+[(1)]: http://www.sbcl.org/ "Steel Bank Common Lisp"
+[(2)]: http://www.gnu.org/software/make/ "GNU Make"
+[(3)]: http://www.xach.com/lisp/buildapp/ "Buildapp - Create executables with SBCL"
+[(4)]: http://www.quicklisp.org/ "Quicklisp"
+[quicklisp-install]: http://www.quicklisp.org/beta/ "Installing quicklisp"
