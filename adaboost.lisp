@@ -2,6 +2,15 @@
 
 (in-package #:phenex)
 
+(defconstant jiggle-rate 1.5)
+
+(defun count-classes (cases)
+  (let ((ht (make-hash-table :test #'equal)))
+    (mapc 
+     #'(lambda (x) (setf (gethash (car x) ht) t))
+     cases)
+    (hash-table-count ht)))
+
 (defun normalize (w-arr)
   "Destructively normalizes an array."
   (let ((sum (sum w-arr)))
@@ -24,25 +33,41 @@
 		  class k)
 	 finally (return class)))))
 
-(defun update-weights (h cases weights)
+(defun jiggle-weights (w beta)
+  "Internal function used for adaboost-training. Updates the weights
+properly. Immutable."
+  (let ((N (array-total-size w)))
+    (->>
+     (map 'vector
+	  #'(lambda (wi)
+	      (max 0 (+ wi (/ (- (random 2.0) 1)
+			      (expt N beta)))))
+	  w)
+     (normalize))))
+
+(defun update-weights (h cases weights L)
   "Internal function used for adaboost-training. Updates the weights
 properly. Immutable."
   (let* ((err (loop for (yi . xi) in cases
 		 for w across weights
 		 if (not (= yi (funcall h xi)))
-		   summing w))
-	 (edited-weights 
-	  (map 'vector 
-	       #'(lambda (yx wi)
-		   (destructuring-bind (yi . xi)
-		       yx
-		     (if (= (funcall h xi) yi)
-			 (* wi (/ err 
-				  (max (- 1 err) EPSILON)))
-			 wi)))
-	       cases weights)))
+		 summing w))
+	 (edited-weights
+	  (cond ((>= err (/ (- L 1.0) L)) (jiggle-weights weights jiggle-rate))
+		((< 0 err (/ (- L 1.0) L))
+		 (map 'vector
+		      #'(lambda (yx wi)
+			  (destructuring-bind (yi . xi)
+			      yx
+			    (if (= (funcall h xi) yi)
+				(* wi (/ err 
+					 (max (- 1 err) EPSILON)))
+				wi)))
+		      cases weights))
+		((zerop err) (jiggle-weights weights jiggle-rate)))))
     (values (normalize edited-weights)
-	    err)))
+	    (log (* (/ (- err 1) (if (zerop err) -1 err))
+		    (- L 1)))))) ; $\log\left[\tfrac{1-error}{error}(L - 1)\right]$
 
 (defun adaboost-training (hyp-type cases)
   "Defines the ADABOOST-TRAINING algorithm. Takes in a list of hypotheses and a
@@ -56,20 +81,19 @@ BEGINNING with the class it actually is. The list of hypotheses contains a
 pair (h-fn . w), where w is how much weight a the hypothesis should be given."
   (let* ((N (length cases))
 	 (K (sum hyp-type :key #'cdr))
-	 (w (make-array N :initial-element (/ 1 N)))
+	 (L (count-classes cases))
+	 (w (make-array N :initial-element (/ 1.0 N)))
 	 (h (make-array K :initial-element nil))
 	 (z (make-array K :initial-element 0)))
     (loop with k = 0
-       for (L . l-n) in hyp-type 
+       for (hyp-fn . l-n) in hyp-type 
        do (dotimes (_ l-n)
-	    (let ((h-fn (funcall L cases w)))
+	    (princ ".")
+	    (let ((h-fn (funcall hyp-fn cases w)))
 	      (multiple-value-bind (w+ h-err)
-		    (update-weights h-fn cases w)
+		    (update-weights h-fn cases w L)
 		    (setf w w+
 			  (svref h k) h-fn
-			  (svref z k) (log (max EPSILON 
-					    (/ (- 1 h-err)
-					       (max h-err EPSILON)))
-					   2))
+			  (svref z k) h-err)
 		    (incf k)))))
-    (cons h z)))
+    (list h z))) ;; cons h z
