@@ -66,7 +66,7 @@ properly. Immutable."
 		      cases weights))
 		((zerop err) (jiggle-weights weights jiggle-rate)))))
     (values (normalize edited-weights)
-	    (log (* (/ (- err 1) (if (zerop err) -1 err))
+	    (log (* (/ (- 1 err) (if (zerop err) (- 1 err) err))
 		    (- L 1)))))) ; $\log\left[\tfrac{1-error}{error}(L - 1)\right]$
 
 (defun adaboost-training (hyp-type cases)
