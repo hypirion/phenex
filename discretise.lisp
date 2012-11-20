@@ -1,5 +1,7 @@
 ;;; -*- Mode: LISP; Syntax: COMMON-LISP; Package: PHENEX; Base: 10 -*-
 
+(in-package #:phenex)
+
 (defun uniformly-discretise (cases buckets)
   "Splits attributes into uniformly sized buckets space-wise. Sets the attribute
 value to the number of the bucket it is put in, 0 -> lowest bucket, n-1 ->
