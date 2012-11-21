@@ -45,6 +45,9 @@ form, etc."
 (defun fnil (f v)
   (lambda (x &rest ys) (apply f (if (null x) v x) ys)))
 
+(defun +* (&rest elts)
+  (apply (fnil #'+ 0) elts))
+
 (defmacro bind (&body body)
   `(multiple-value-bind ,@body))
 
@@ -53,3 +56,10 @@ form, etc."
 
 (defun range (a b)
   (loop for x from a below b collect x))
+
+(set-pprint-dispatch 'hash-table
+ (lambda (str ht)
+  (format str "{~{~{~S => ~S~}~^, ~}}"
+   (loop for key being the hash-keys of ht
+         for value being the hash-values of ht
+         collect (list key value)))))
