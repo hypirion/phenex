@@ -54,20 +54,25 @@ probabilities."
 	   (let* ((best-attr (min-key ; Find best attribute to split with
 			      #'(lambda (n) (entropy n cases probs))
 			      rem-attrs))
-		 (rem-attrs* (remove best-attr rem-attrs)))
-	     (cons best-attr
+		  (rem-attrs* (remove best-attr rem-attrs))
+		  (most-common (most-common-class cases probs)))
+	     (list best-attr
+		   most-common
 		   (loop with ht = (make-hash-table :test #'equal)
 		      for (aval c p) in (partition-by best-attr cases probs)
-		      do (setf (gethash aval ht) (id3 c p rem-attrs*))
+		      do (setf (gethash aval ht) (id3-tree c p rem-attrs*))
 		      finally (return ht))))))))
 
 (defun id3-lookup (attrs tree)
   (if (atom tree) tree
-      (destructuring-bind (attr . ht) tree
-	(id3-lookup attrs (gethash (nth attr attrs) ht)))))
+      (destructuring-bind (attr most-common ht) tree
+	(let ((new-tree (gethash (nth attr attrs) ht)))
+	  (if new-tree
+	      (id3-lookup attrs new-tree)
+	      most-common)))))
 
 (defun id3 (cases weights)
-  (let* ((attrs (range 0 (- (length (car cases)) 1)))
-	 (tree (id3-tree cases (coerce 'list weights) attrs)))
+  (let* ((attrs (range 0 (length (cdar cases))))
+	 (tree (id3-tree cases (coerce weights 'list) attrs)))
     #'(lambda (attrs)
 	(id3-lookup attrs tree))))
