@@ -44,10 +44,10 @@ probabilities."
 	 if (< best-c v) do (setq best-c v best k)
 	 finally (return best))))
 
-(defun id3-tree (cases probs rem-attrs) ;; Assumes positive amt. of cases.
+(defun id3-tree (depth cases probs rem-attrs) ;; Assumes positive amt. of cases.
   (let ((first-class (caar cases)))
-    (cond ((null rem-attrs) ; If no attributes left, pick most common class
-	   (most-common-class cases probs))
+    (cond ((or (zerop depth) (null rem-attrs)) ; If no attributes left, pick
+	   (most-common-class cases probs))    ; most common class
 	  ((every #'(lambda (c) (= first-class (car c))) cases)
 	   first-class) ; If every class is equal, return that one.
 	  (t 
@@ -60,7 +60,8 @@ probabilities."
 		   most-common
 		   (loop with ht = (make-hash-table :test #'equal)
 		      for (aval c p) in (partition-by best-attr cases probs)
-		      do (setf (gethash aval ht) (id3-tree c p rem-attrs*))
+		      do (setf (gethash aval ht) 
+			       (id3-tree (- depth 1) c p rem-attrs*))
 		      finally (return ht))))))))
 
 (defun id3-lookup (attrs tree)
@@ -71,8 +72,12 @@ probabilities."
 	      (id3-lookup attrs new-tree)
 	      most-common)))))
 
-(defun id3 (cases weights)
+(defun id3 (depth cases weights)
   (let* ((attrs (range 0 (length (cdar cases))))
-	 (tree (id3-tree cases (coerce weights 'list) attrs)))
+	 (tree (id3-tree depth cases (coerce weights 'list) attrs)))
     #'(lambda (attrs)
 	(id3-lookup attrs tree))))
+
+(defun id3+depth (depth)
+  (lambda (cases weights)
+    (id3 depth cases weights)))
