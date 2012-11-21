@@ -14,19 +14,19 @@
 
 (defconstant synopsis
 "Phenex is a boosting program with diverse classifiers, like music to your ears.
-Usage: phenex NBCs ID3s ID3d filter-type bucket-size train-p seed infile
+Usage: phenex NBCs ID3s ID3d filter-type bucket-size train-p rand infile
 
 All options are required, and mean the following:
     NBCs - Number of Naive Bayesian Filters
     ID3s - Number of ID3-trees
     ID3d - Depth of the ID3 trees (-1 for unbounded depth)
     filter-type - Either \"none\" or \"discretize\"
-    bucket-size - ignored if filter-type is \"none\", the size of buckets if
+    bucket-size - Ignored if filter-type is \"none\", the size of buckets if
                   filter-type is \"discretize\"
     train-p - How much of the dataset which should be trained on. Not in
               percent, but in decimals. (E.g. 0.5 = 50%)
-    seed - Seed used for the randomization part. -1 for a \"truly randomized\"
-           seed, otherwise set to the specified integer.
+    rand - \"true\" or \"false\". When true, is actually random. If false, will
+           be deterministic (i.e. return same result every time).
     infile - The input file with the data to work on.
 "
   )
@@ -37,16 +37,48 @@ All options are required, and mean the following:
   (when (/= (length argv) 9)
     (format t banner)
     (format t synopsis)
-    (sb-ext:quit))
+    (sb-ext:exit))
   (let ((nbcs (parse-integer (nth 1 argv)))
 	(id3s (parse-integer (nth 2 argv)))
 	(id3d (parse-integer (nth 3 argv)))
 	(filter-type (nth 4 argv))
-	(bucket-size (nth 5 argv))
+	(bucket-size (parse-integer (nth 5 argv)))
 	(train-p (read-from-string (nth 6 argv)))
-	(seed (parse-integer (nth 7 argv)))
-	(infile (nth 8 argv))))
-  (sb-ext:quit))
+	(rand (nth 7 argv))
+	(infile (nth 8 argv))
+	filter dataset hs-lst)
+
+    (if (string= rand "true")
+	(setf *random-state* (make-random-state t)))
+    (cond ((string= filter-type "discretize") 
+	   (setf filter #'(lambda (cases) (uniformly-discretise 
+				      cases 
+				      bucket-size))))
+	  ((string= filter-type "none")
+	   (setf filter #'identity)))
+    (setf dataset
+	  (funcall filter
+		   (-> infile
+		       (read-dataset)
+		       (shuffle))))
+    (if (plusp id3s)
+	(push (cons (id3+depth id3d) id3s) hs-lst))
+    (if (plusp nbcs)
+	(push (cons #'naive-bayes nbcs) hs-lst))
+
+    (destructuring-bind (train test) 
+	(split-dataset dataset train-p)
+      
+      (let* ((ab (adaboost-training hs-lst train))
+	     (abfn (apply #'weighted-majority-fn ab)))
+	(format t "~&~F~%" (percent-right abfn train))
+	(format t "~&~F~%" (percent-right abfn test)))
+)
+    
+    )
+  (sb-ext:exit))
+
+
 
 (defun percent-right (fn dataset)
   (if (null dataset)
