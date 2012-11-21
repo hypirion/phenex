@@ -30,27 +30,44 @@
        do (push p (gethash a ht-p)))
     (loop for a being the hash-keys in ht-c using (hash-value c)
        for p = (gethash a ht-p)
-       collect (list c p))))
+       collect (list a c p))))
 
 (defun most-common-class (cases probs)
   "Return the most common class out of the different cases, based on their
 probabilities."
   (let ((ht (make-hash-table :test #'equal)))
-    (loop for (f . r) in cases
+    (loop for (f . _) in cases
 	  for p in probs
-       do (incf (gethash (car c) ht 0) p))
+       do (incf (gethash f ht 0) p))
     (loop with best-c = 0 and best = nil
        for k being the hash-keys in ht using (hash-value v)
 	 if (< best-c v) do (setq best-c v best k)
 	 finally (return best))))
-#|
-(defun id3 (cases probs rem-attrs) ;; Assumes positive amt. of cases.
+
+(defun id3-tree (cases probs rem-attrs) ;; Assumes positive amt. of cases.
   (let ((first-class (caar cases)))
-    (cond ((null rem-attrs)
-	   (most-common-class cases))
-	  ((every #'(lambda (c) (= first-class (car c))))
-	   first-class)
-	  
-	  )
-    ))
-|#
+    (cond ((null rem-attrs) ; If no attributes left, pick most common class
+	   (most-common-class cases probs))
+	  ((every #'(lambda (c) (= first-class (car c))) cases)
+	   first-class) ; If every class is equal, return that one.
+	  (t 
+	   (let* ((best-attr (min-key ; Find best attribute to split with
+			      #'(lambda (n) (entropy n cases probs))
+			      rem-attrs))
+		 (rem-attrs* (remove best-attr rem-attrs)))
+	     (cons best-attr
+		   (loop with ht = (make-hash-table :test #'equal)
+		      for (aval c p) in (partition-by best-attr cases probs)
+		      do (setf (gethash aval ht) (id3 c p rem-attrs*))
+		      finally (return ht))))))))
+
+(defun id3-lookup (attrs tree)
+  (if (atom tree) tree
+      (destructuring-bind (attr . ht) tree
+	(id3-lookup attrs (gethash (nth attr attrs) ht)))))
+
+(defun id3 (cases weights)
+  (let* ((attrs (range 0 (- (length (car cases)) 1)))
+	 (tree (id3-tree cases (coerce 'list weights) attrs)))
+    #'(lambda (attrs)
+	(id3-lookup attrs tree))))

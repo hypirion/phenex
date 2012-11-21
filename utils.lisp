@@ -63,3 +63,10 @@ form, etc."
    (loop for key being the hash-keys of ht
          for value being the hash-values of ht
          collect (list key value)))))
+
+(defun min-key (k xs)
+  "Returns the x for which (k x), a number, is least."
+  (reduce 
+   #'(lambda (x1 x2)
+     (if (< (funcall k x1) (funcall k x2)) x1 x2))
+   xs))

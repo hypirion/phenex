@@ -25,4 +25,5 @@
 	       (:file "discretise")
 	       (:file "adaboost")
 	       (:file "naive-bayes")
+	       (:file "id3")
                (:file "phenex")))
