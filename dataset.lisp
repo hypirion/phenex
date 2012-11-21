@@ -25,9 +25,9 @@ is the last element in each line."
 	    (zerop (random 2)))))
 
 (defun split-dataset (list p)
-  "Splits the dataset into two randomized lists. The first list is p of the size
-of the total list length rounded to the closest integer. The second is the
-remaining elements."
+  "Splits the dataset into two lists. The first list is p of the size of the
+total list length rounded to the closest integer. The second is the remaining
+elements."
   (let ((l (round (* p (length list)))))
     (list (subseq list 0 l)
 	  (subseq list l))))
