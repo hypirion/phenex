@@ -88,7 +88,7 @@ pair (h-fn . w), where w is how much weight a the hypothesis should be given."
     (loop with k = 0
        for (hyp-fn . l-n) in hyp-type 
        do (dotimes (_ l-n)
-	    (princ ".")
+;	    (princ ".")
 	    (let ((h-fn (funcall hyp-fn cases w)))
 	      (multiple-value-bind (w+ h-err)
 		    (update-weights h-fn cases w L)

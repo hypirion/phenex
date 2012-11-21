@@ -68,25 +68,68 @@ All options are required, and mean the following:
 
     (destructuring-bind (train test) 
 	(split-dataset dataset train-p)
-      
-      (let* ((ab (adaboost-training hs-lst train))
-	     (abfn (apply #'weighted-majority-fn ab)))
-	(format t "~&~F~%" (percent-right abfn train))
-	(format t "~&~F~%" (percent-right abfn test)))
-)
-    
-    )
+      (destructuring-bind (h z)
+	  (adaboost-training hs-lst train)
+	(let ((total-fn (weighted-majority-fn h z))
+	      (nbc (if (plusp nbcs) 
+		       (weighted-majority-fn (subseq h 0 nbcs)
+					     (subseq z 0 nbcs))))
+	      (id3 (if (plusp id3s)
+		       (weighted-majority-fn (subseq h nbcs)
+					     (subseq z nbcs)))))
+;	  (format t "~&TOTALS~%")
+;	  (format t "~&~F~%" (percent-wrong total-fn train))
+	  (format t "~&~D \\& ~D:~D &" nbcs id3s id3d)
+	  (format t "~,5F &" (percent-wrong total-fn test))
+;	  (format t "~&~F~%" (std-dev train h))
+;	  (format t "~&~F~%" (avg-dev train h))
+	  (when nbc
+;	    (format t "NBCs~%")
+;	    (format t "~&~F~%" (percent-wrong nbc train))
+;	    (format t "~&~F~%" (percent-wrong nbc test))
+	    (format t "~,5F &" (std-dev train (subseq h 0 nbcs)))
+	    (format t "~,5F &" (avg-dev train (subseq h 0 nbcs))))
+	  (if (not nbc)
+	      (format t "- & - &"))
+	  (when id3
+;	    (format t "ID3s~%")
+;	    (format t "~&~F~%" (percent-wrong id3 train))
+;	    (format t "~&~F~%" (percent-wrong id3 test))
+	    (format t "~,5F &" (std-dev train (subseq h nbcs)))
+	    (format t "~,5F \\\\~%" (avg-dev train (subseq h nbcs))))
+	  (if (not id3)
+	      (format t "- & - \\\\~%"))))))
   (sb-ext:exit))
 
 
+(defun avg (xs)
+  (/ (reduce #'+ xs)
+     (float (length xs))))
 
-(defun percent-right (fn dataset)
+(defun std-dev (cases hs)
+  (if (= 1 (length hs)) 0
+      (let* ((pw (mapcar #'(lambda (h) (percent-wrong h cases)) 
+			 (coerce hs 'list)))
+	     (mean (avg pw)))
+	(sqrt
+	 (/ (reduce #'+ (mapcar #'(lambda (x) (expt (- x mean) 2)) pw))
+	    (- (length hs) 1))))))
+
+(defun avg-dev (cases hs)
+  (if (= 1 (length hs)) 0
+      (let* ((pw (mapcar #'(lambda (h) (percent-wrong h cases))
+			 (coerce hs 'list)))
+	     (mean (avg pw)))
+	(/ (reduce #'+ (mapcar #'(lambda (x) (abs (- x mean))) pw))
+	   (length hs)))))
+
+(defun percent-wrong (fn dataset)
   (if (null dataset)
       1.0
       (loop with count = 0 and correct = 0
 	 for (class . attrs) in dataset
 	 do (incf count)
-	 if (= class (funcall fn attrs))
+	 if (not (= class (funcall fn attrs)))
 	 do (incf correct)
 	 finally (return (/ correct count)))))
 
@@ -99,6 +142,6 @@ All options are required, and mean the following:
 	  (split-dataset 0.7))
     (let* ((ab (adaboost-training h-lst train))
 	   (abfn (apply #'weighted-majority-fn ab)))
-      (format t "~&~F~%" (percent-right abfn train))
-      (format t "~&~F~%" (percent-right abfn test))
+      (format t "~&~F~%" (percent-wrong abfn train))
+      (format t "~&~F~%" (percent-wrong abfn test))
       ab)))
