@@ -21,6 +21,7 @@
   :depends-on (#:split-sequence)
   :components ((:file "package")
 	       (:file "utils")
+	       (:file "math")
 	       (:file "dataset")
 	       (:file "discretise")
 	       (:file "adaboost")

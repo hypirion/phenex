@@ -70,7 +70,7 @@ probabilities."
 	(let ((new-tree (gethash (nth attr attrs) ht)))
 	  (if new-tree
 	      (id3-lookup attrs new-tree)
-	      most-common)))))
+	      most-common))))) ; if new-tree is nil, return most common attr
 
 (defun id3 (depth cases weights)
   (let* ((attrs (range 0 (length (cdar cases))))
