@@ -69,6 +69,12 @@ Different commands (*TODO: fix this properly*)
 
 TODO
 
+## Resources
+
+There are some example datasets to work on within the `datasets` folder. They
+all come from the [Irvine Machine Learning repository][IMLR], and more can be
+found there.
+
 ## Licence
 
 Copyright © 2012 Jean Niklas L'orange
@@ -82,3 +88,4 @@ the same as Clojure.
 [(3)]: http://www.xach.com/lisp/buildapp/ "Buildapp - Create executables with SBCL"
 [(4)]: http://www.quicklisp.org/ "Quicklisp"
 [quicklisp-install]: http://www.quicklisp.org/beta/ "Installing quicklisp"
+[IMLR]: http://archive.ics.uci.edu/ml/ "Irvine Machine Learning repository"
