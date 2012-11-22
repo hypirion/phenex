@@ -50,9 +50,9 @@ All options are required, and mean the following:
 
     (if (string= rand "true")
 	(setf *random-state* (make-random-state t)))
-    (cond ((string= filter-type "discretize") 
+    (cond ((string= filter-type "discretize")
 	   (setf filter #'(lambda (cases) (uniformly-discretise 
-				      cases 
+				      cases
 				      bucket-size))))
 	  ((string= filter-type "none")
 	   (setf filter #'identity)))
@@ -66,37 +66,39 @@ All options are required, and mean the following:
     (if (plusp nbcs)
 	(push (cons #'naive-bayes nbcs) hs-lst))
 
-    (destructuring-bind (train test) 
+    (destructuring-bind (train test)
 	(split-dataset dataset train-p)
       (destructuring-bind (h z)
 	  (adaboost-training hs-lst train)
 	(let ((total-fn (weighted-majority-fn h z))
-	      (nbc (if (plusp nbcs) 
+	      (nbc (if (plusp nbcs)
 		       (weighted-majority-fn (subseq h 0 nbcs)
 					     (subseq z 0 nbcs))))
 	      (id3 (if (plusp id3s)
 		       (weighted-majority-fn (subseq h nbcs)
 					     (subseq z nbcs)))))
-;	  (format t "~&TOTALS~%")
-;	  (format t "~&~F~%" (percent-wrong total-fn train))
-	  (format t "~&~D \\& ~D:~D &" nbcs id3s id3d)
-	  (format t "~,5F &" (percent-wrong total-fn test))
-;	  (format t "~&~F~%" (std-dev train h))
-;	  (format t "~&~F~%" (avg-dev train h))
+	  (format t "~&TOTALS~%")
+	  (format t "~&~D NBCs, ~D ID3s with a maximal depth of ~D~%"
+		  nbcs id3s id3d)
+	  (format t "~,5F wrong on training set~%"
+		  (percent-wrong total-fn train))
+	  (format t "~,5F wrong on test set~%" (percent-wrong total-fn test))
+	  (format t "~,5F std.dev. on training set~%" (std-dev train h))
+	  (format t "~,5F avg.dev. on training set~%" (avg-dev train h))
 	  (when nbc
-;	    (format t "NBCs~%")
-;	    (format t "~&~F~%" (percent-wrong nbc train))
-;	    (format t "~&~F~%" (percent-wrong nbc test))
-	    (format t "~,5F &" (std-dev train (subseq h 0 nbcs)))
-	    (format t "~,5F &" (avg-dev train (subseq h 0 nbcs))))
-	  (if (not nbc)
-	      (format t "- & - &"))
+	    (format t "NBCs~%")
+	    (format t "~,5F wrong on training set~%" (percent-wrong nbc train))
+	    (format t "~,5F wrong on test set~%" (percent-wrong nbc test))
+	    (format t "~,5F std.dev. on training set~%"
+		    (std-dev train (subseq h 0 nbcs)))
+	    (format t "~,5F avg.dev. on training set~%"
+		    (avg-dev train (subseq h 0 nbcs))))
 	  (when id3
-;	    (format t "ID3s~%")
-;	    (format t "~&~F~%" (percent-wrong id3 train))
-;	    (format t "~&~F~%" (percent-wrong id3 test))
-	    (format t "~,5F &" (std-dev train (subseq h nbcs)))
-	    (format t "~,5F \\\\~%" (avg-dev train (subseq h nbcs))))
-	  (if (not id3)
-	      (format t "- & - \\\\~%"))))))
+	    (format t "ID3s~%")
+	    (format t "~,5F wrong on training set~%" (percent-wrong id3 train))
+	    (format t "~,5F wrong on test set~%" (percent-wrong id3 test))
+	    (format t "~,5F std.dev. on training set~%"
+		    (std-dev train (subseq h nbcs)))
+	    (format t "~,5F avg.dev. on training set~%"
+		    (avg-dev train (subseq h nbcs))))))))
   (sb-ext:exit))
