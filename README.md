@@ -18,6 +18,10 @@
 
 Phenex is a boosting program with diverse classifiers, like music to your ears.
 
+Phenex is feature complete, except (unfortunately) for proper documentation.
+Command line parsing, helpful error messages and documentation may appear in the
+future, but do not expect it to be.
+
 ## Installation
 
 To install, one needs to have sbcl [(1)][], GNU make [(2)][] and buildapp
